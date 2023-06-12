@@ -1,18 +1,21 @@
-def detect_anomalies(events):
+from scapy.all import IP
+
+def detect_anomalies(packets, target_ip):
     """
-    Detect anomalies in a list of events.
+    Detect anomalies in a list of packets.
 
     Args:
-        events (list): The list of events to analyze.
+        packets (list): The list of packets to analyze.
 
     Returns:
         list: A list of anomalies.
     """
     anomalies = []
 
-    for event in events:
-        # Check for events from a specific source IP address
-        if event['src'] == '192.0.2.0':
-            anomalies.append(event)
+    for packet in packets:
+        print("Checking packet: ", packet.summary())
+        if IP in packet and packet[IP].src == target_ip:
+            print("Anomaly detected in packet: ", packet.summary())
+            anomalies.append(packet)
 
     return anomalies

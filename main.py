@@ -1,32 +1,30 @@
-from packet_capture import capture_packets, get_os, list_interfaces
-from packet_analysis import analyze_packets
-from anomaly_detection import detect_anomalies
-from alerts import send_alert
-from event_logging import log_event
-from ui import start_interface, stop_interface
+import sys
+from packet_capture.capture import start_capture
+from anomaly_detection.detection import detect_anomalies
+from alerts.alert import alert_user
+from event_logging.log import log_event
+from ui.interface import get_interface
+
+def start_interface(interface, target_ip):
+    print("Start capturing packets on interface: ", interface)
+    packets = start_capture(interface)
+    print("Finished capturing packets. Total packets captured: ", len(packets))
+    anomalies = detect_anomalies(packets, target_ip)
+    print("Finished detecting anomalies. Total anomalies detected: ", len(anomalies))
+    for anomaly in anomalies:
+        alert_user(anomaly)
+        log_event(anomaly)
 
 def main():
-    os_type = get_os()
-    print(f"Detected OS: {os_type}")
-    interfaces = list_interfaces()
-    print("Available network interfaces:")
-    for i, interface in enumerate(interfaces):
-        print(f"{i}. {interface}")
-    interface_number = int(input("Select the interface number to listen on: "))
-    interface = interfaces[interface_number]
-    start_interface(interface)
+    print("IDS is starting")
+    if len(sys.argv) > 1 and sys.argv[1] == 'start':
+        interface = get_interface()
+        target_ip = input("Enter the IP address to be analyzed: ")
+        print("Starting packet capture and analysis on interface: ", interface)
+        start_interface(interface, target_ip)
+    else:
+        print("No valid arguments provided. Please use 'start' to start the IDS.")
+    print("IDS is stopping")
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Intrusion Detection System.')
-    parser.add_argument('command', type=str, help='Command to run the IDS. Available commands: "start", "stop"')
-
-    args = parser.parse_args()
-
-    if args.command.lower() == 'start':
-        main()
-    elif args.command.lower() == 'stop':
-        stop_interface()
-    else:
-        print(f'Unknown command: {args.command}')
+    main()
